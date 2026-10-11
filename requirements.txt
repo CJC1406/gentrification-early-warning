@@ -1,0 +1,16 @@
+# Dashboard
+streamlit>=1.50
+plotly>=5.24
+pandas>=2.1
+numpy>=1.26
+geopandas>=0.14
+shapely>=2.0
+folium>=0.17
+streamlit-folium>=0.22
+
+# Data pipeline and models
+requests>=2.31
+scikit-learn>=1.4
+libpysal>=4.10
+joblib>=1.3
+tensorflow>=2.15

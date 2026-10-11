@@ -2,6 +2,8 @@ import requests
 import csv
 from pathlib import Path
 
+from preprocessing import census_api_key
+
 API_URL = "https://api.census.gov/data/{year}/acs/acs5/profile"
 
 YEARS = [2010, 2011, 2012, 2016]
@@ -9,7 +11,7 @@ YEARS = [2010, 2011, 2012, 2016]
 OUTPUT_DIR = Path("data/raw")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-API_KEY = "da2c02abec9be8565b3b7c8d63ee324e99ad0f40"
+API_KEY = census_api_key()
 
 
 def get_variables(year):
@@ -44,6 +46,11 @@ def get_variables(year):
     names = []
 
     for name in variables:
+
+        # NAME also ends in "E" but is already requested separately;
+        # requesting it twice creates a duplicate text column.
+        if not name.startswith("DP03_"):
+            continue
 
         # Keep percentage estimates
         if name.endswith("PE"):
@@ -131,6 +138,8 @@ def download_year(year):
 
         else:
 
+            seen = set()
+
             for row in rows:
 
                 tract_id = tuple(row[-3:])
@@ -138,6 +147,7 @@ def download_year(year):
                 if tract_id not in all_rows:
                     continue
 
+                seen.add(tract_id)
                 existing = all_rows[tract_id]
 
                 # Add variables from this chunk.
@@ -146,6 +156,11 @@ def download_year(year):
                 # row[-3:] = state, county, tract
                 # Therefore row[1:-3] = requested variables.
                 existing.extend(row[1:-3])
+
+            # A tract missing from this chunk would otherwise end up with
+            # a short row and every later column shifted. Pad with blanks.
+            for tract_id in set(all_rows) - seen:
+                all_rows[tract_id].extend([""] * len(header[1:-3]))
 
             # Add only the new variable names.
             all_header.extend(header[1:-3])
