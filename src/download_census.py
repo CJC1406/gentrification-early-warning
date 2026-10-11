@@ -2,6 +2,8 @@ import requests
 import csv
 from pathlib import Path
 
+from preprocessing import census_api_key
+
 API_URL = "https://api.census.gov/data/{year}/acs/acs5"
 
 YEARS = [2010, 2011, 2012, 2016]
@@ -20,7 +22,7 @@ def download_year(year):
         "get": ",".join(VARIABLES),
         "for": "tract:*",
         "in": "state:06",
-        "key": "da2c02abec9be8565b3b7c8d63ee324e99ad0f40",
+        "key": census_api_key(),
     }
 
     response = requests.get(
@@ -47,5 +49,6 @@ def download_year(year):
     print(f"      saved to {output_file}")
 
 
-for year in YEARS:
-    download_year(year)
+if __name__ == "__main__":
+    for year in YEARS:
+        download_year(year)

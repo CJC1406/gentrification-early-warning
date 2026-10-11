@@ -1,168 +1,69 @@
-import pandas as pd
+"""
+Random Forest with vs. without spatial features.
 
-from pathlib import Path
-
-from sklearn.model_selection import train_test_split
+Both models use the same rows, the same split and the same settings, so
+the difference in scores is attributable to the spatial features.
+"""
 
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.pipeline import Pipeline
 
-from sklearn.metrics import (
-    accuracy_score,
-    precision_score,
-    recall_score,
+from preprocessing import (
+    DATA_DIR,
+    SEED,
+    evaluate,
+    load_xy,
+    majority_baseline,
+    make_preprocessor,
+    print_results,
+    split,
 )
 
+SPATIAL_COLUMNS = [
+    "housing_spatial_lag",
+    "income_spatial_lag",
+    "housing_morans_i",
+    "income_morans_i",
+]
 
-DATA_DIR = Path("data/raw")
+X, y, tract_ids = load_xy(DATA_DIR / "model_dataset_spatial.csv")
+X_train, X_test, y_train, y_test, _, _ = split(X, y, tract_ids)
 
-
-# ---------------------------------------------------------
-# Load spatial dataset
-# ---------------------------------------------------------
-
-df = pd.read_csv(
-    DATA_DIR / "model_dataset_spatial.csv"
-)
-
-
-# ---------------------------------------------------------
-# Target
-# ---------------------------------------------------------
-
-y = df["gentrified"]
+print(f"Training samples: {len(X_train):,}")
+print(f"Test samples:     {len(X_test):,}")
+print(f"Features:         {X.shape[1]:,}")
 
 
-# ---------------------------------------------------------
-# Remove target and non-feature columns
-# ---------------------------------------------------------
-
-X = df.drop(
-    columns=[
-        "tract_id",
-        "housing_cost_change",
-        "gentrified",
-    ]
-)
-
-
-# ---------------------------------------------------------
-# Convert everything to numeric
-# ---------------------------------------------------------
-
-X = X.apply(
-    pd.to_numeric,
-    errors="coerce",
-)
+def random_forest():
+    return Pipeline(
+        [
+            ("prep", make_preprocessor(scale=False)),
+            (
+                "rf",
+                RandomForestClassifier(
+                    n_estimators=125,
+                    max_features=18,
+                    random_state=SEED,
+                    n_jobs=-1,
+                ),
+            ),
+        ]
+    )
 
 
-# ---------------------------------------------------------
-# Handle missing values
-# ---------------------------------------------------------
+rows = [majority_baseline(y_train, y_test)[0]]
 
-X = X.fillna(
-    X.median()
-)
+spatial = [c for c in SPATIAL_COLUMNS if c in X.columns]
 
+for name, columns in [
+    ("Random Forest (no spatial)", [c for c in X.columns if c not in spatial]),
+    ("Random Forest (with spatial)", list(X.columns)),
+]:
+    model = random_forest()
+    model.fit(X_train[columns], y_train)
+    pred = model.predict(X_test[columns])
+    prob = model.predict_proba(X_test[columns])[:, 1]
+    rows.append(evaluate(name, y_test, pred, prob))
 
-# ---------------------------------------------------------
-# Train/test split
-# ---------------------------------------------------------
-
-X_train, X_test, y_train, y_test = train_test_split(
-
-    X,
-    y,
-
-    test_size=0.20,
-
-    random_state=42,
-
-    stratify=y,
-)
-
-
-print(
-    f"Training samples: {len(X_train):,}"
-)
-
-print(
-    f"Test samples:     {len(X_test):,}"
-)
-
-print(
-    f"Features:         {X.shape[1]:,}"
-)
-
-
-# ---------------------------------------------------------
-# Random Forest
-# ---------------------------------------------------------
-
-model = RandomForestClassifier(
-
-    n_estimators=125,
-
-    max_features=18,
-
-    random_state=42,
-
-    n_jobs=-1,
-)
-
-
-model.fit(
-    X_train,
-    y_train,
-)
-
-
-# ---------------------------------------------------------
-# Predictions
-# ---------------------------------------------------------
-
-predictions = model.predict(
-    X_test
-)
-
-
-# ---------------------------------------------------------
-# Metrics
-# ---------------------------------------------------------
-
-accuracy = accuracy_score(
-    y_test,
-    predictions,
-)
-
-precision = precision_score(
-    y_test,
-    predictions,
-)
-
-recall = recall_score(
-    y_test,
-    predictions,
-)
-
-
-print()
-
-print(
-    "Random Forest with Spatial Features"
-)
-
-print(
-    "-----------------------------------"
-)
-
-print(
-    f"Accuracy:  {accuracy:.3f}"
-)
-
-print(
-    f"Precision: {precision:.3f}"
-)
-
-print(
-    f"Recall:    {recall:.3f}"
-)
+print("\nSpatial-feature comparison (held-out test set)")
+print_results(rows)

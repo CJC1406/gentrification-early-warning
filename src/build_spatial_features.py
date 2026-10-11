@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 import geopandas as gpd
 import requests
@@ -5,6 +6,8 @@ import zipfile
 from pathlib import Path
 
 from libpysal.weights import Queen
+
+from preprocessing import census_api_key
 
 
 # ---------------------------------------------------------
@@ -65,7 +68,7 @@ def download_s2503(year, output_file):
         "get": ",".join(variables),
         "for": "tract:*",
         "in": "state:06",
-        "key": "da2c02abec9be8565b3b7c8d63ee324e99ad0f40",
+        "key": census_api_key(),
     }
 
     print(f"Downloading S2503 for {year}...")
@@ -418,6 +421,15 @@ def load_tract_geometry():
 # Calculate spatial features
 # ---------------------------------------------------------
 
+def _nanmean(values, index):
+    """Mean of values[index] ignoring NaN; NaN if nothing is left."""
+    if len(index) == 0:
+        return float("nan")
+    selected = values[index]
+    selected = selected[~np.isnan(selected)]
+    return float(selected.mean()) if selected.size else float("nan")
+
+
 def calculate_spatial_features(
     gdf,
     changes,
@@ -425,11 +437,14 @@ def calculate_spatial_features(
 
     print("\nBuilding Queen contiguity weights...")
 
+    # Keep EVERY tract polygon (left join) so contiguity is computed on
+    # the real map. An inner join would delete tracts with missing data
+    # and leave their neighbours with fewer (or no) neighbours.
     merged = gdf.merge(
         changes,
         on="tract_id",
-        how="inner",
-    )
+        how="left",
+    ).reset_index(drop=True)
 
     print(
         f"Tracts after geometry merge: "
@@ -470,20 +485,15 @@ def calculate_spatial_features(
             weights.neighbors[i]
         )
 
-        if len(neighbors) == 0:
+        # Average only neighbours that have a value. A plain .mean()
+        # returns NaN as soon as one neighbour is missing.
+        housing_lag.append(
+            _nanmean(housing_values, neighbors)
+        )
 
-            housing_lag.append(float("nan"))
-            income_lag.append(float("nan"))
-
-        else:
-
-            housing_lag.append(
-                housing_values[neighbors].mean()
-            )
-
-            income_lag.append(
-                income_values[neighbors].mean()
-            )
+        income_lag.append(
+            _nanmean(income_values, neighbors)
+        )
 
     merged["housing_spatial_lag"] = (
         housing_lag
