@@ -198,13 +198,11 @@ A reliable comparison requires consistent target definitions, test data, and fea
 
 ## References
 
-This project draws inspiration from:
+This project is based  on:
 
 **A Proximity-Based Early Warning System for Gentrification in California** (2018), Aakash Pattabi, Stanford University.
 
 The original research explores census-based classification, Random Forests, XGBoost, LASSO logistic regression, and spatial features to investigate the early indicators of gentrification.
 
-## Disclaimer
-
-This project is intended for academic research and educational purposes. Its outputs are not definitive assessments of gentrification, displacement, or future housing-market conditions.s. The dashboard only uses their output for the optional
-"Census indicators" table.
+Vivaan J 
+Chiranth J
