@@ -2,7 +2,7 @@
 
 A data-driven dashboard for exploring historical housing-cost changes across California census tracts, comparing machine-learning models, and inspecting tract-level patterns using U.S. Census Bureau data.
 
-> **Research limitation:** The current target labels a tract as positive when its median monthly housing cost increased between 2012 and 2016. This is a housing-cost-increase proxy, not a complete measure of gentrification, displacement, demographic change, or housing unaffordability. The dashboard is a historical research tool; its model scores should not be interpreted as proof that displacement occurred or as a validated forecast of future gentrification.
+> **Research limitation:** The current target labels a tract as positive when its median monthly housing cost increased between 2012 and 2016. This is a housing-cost-increase proxy, not a complete  forecast of future gentrification.
 
 ## Contents
 
