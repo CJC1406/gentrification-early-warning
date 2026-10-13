@@ -17,10 +17,9 @@ A data-driven dashboard for exploring historical housing-cost changes across Cal
 - [Run the dashboard](#run-the-dashboard)
 - [Outputs](#outputs)
 - [Model evaluation](#model-evaluation)
-- [Data sources](#data-sources)
-- [Limitations and responsible use](#limitations-and-responsible-use)
-- [Troubleshooting](#troubleshooting)
+- [Testing with new data](#testing-with-new-data)
 - [Future improvements](#future-improvements)
+- [Data sources](#data-sources)
 
 ## Project overview
 
@@ -280,9 +279,113 @@ The project compares model performance against a majority-class baseline. Metric
 - **F1:** harmonic mean of precision and recall.
 - **ROC-AUC:** ranking ability across classification thresholds when both classes are present.
 
+
+<img width="1042" height="503" alt="Screenshot 2026-10-13 at 5 57 20 AM" src="https://github.com/user-attachments/assets/483a4888-fc10-4583-be57-594c8d34a708" />
+
+
+<img width="1710" height="1112" alt="Screenshot 2026-10-13 at 5 56 59 AM" src="https://github.com/user-attachments/assets/052788ac-1ec1-40dd-83a7-6c016e8e3f62" />
+
+
+
+
+
 The ensemble pipeline also compares ordinary stratified cross-validation with county-grouped cross-validation for a random forest. County-grouped evaluation is important because nearby tracts may be similar; random splitting alone can give an overly optimistic impression of performance on new places.
 
 Do not compare metrics from different splits or pipelines as if they were directly equivalent. Record the dataset version, target definition, split, feature set, model settings, and package versions alongside results. Consider adding a precision-recall curve, confusion matrix, calibration check, and evaluation on a later time period or geographically held-out counties.
+
+## Testing with new data
+
+Use this workflow when you want to test the project with a newer ACS release, a different set of census tracts, or a separately prepared dataset. The exact commands depend on the inputs and paths expected by each script, so check the relevant script before running it.
+
+### 1. Prepare a new dataset
+
+- Download the relevant ACS estimates from the [U.S. Census Bureau](https://www.census.gov/programs-surveys/acs) or use the project's Census download scripts.
+- Keep the required housing-cost variable and socioeconomic features, and document the ACS table, year, geography, and variable names used.
+- Keep census-tract GEOIDs as **11-character strings**. Do not convert them to integers, because leading zeroes are meaningful.
+- Check for duplicate GEOIDs, missing values, inconsistent column names, and changes in tract boundaries.
+- Keep the new data separate from the original files until it has passed validation.
+
+### 2. Build a consistent target
+
+The current target uses the difference between 2012 and 2016 median monthly housing costs. For a new period, define the comparison explicitly, for example:
+
+```text
+housing_cost_change = housing_cost_later_period - housing_cost_earlier_period
+positive_cost_change = 1 if housing_cost_change > 0, otherwise 0
+```
+
+Use comparable ACS estimates and the same unit and definition for both periods. This target indicates a rise in housing costs; it does **not** independently establish that gentrification or displacement occurred. If the new target period changes, record that change and do not compare its metrics directly with the original experiment without explaining the difference.
+
+### 3. Rebuild features and the training dataset
+
+Place new files in the paths expected by the scripts, or update the scripts to point to the new files. The existing workflow includes:
+
+```bash
+python src/build_target.py
+python src/build_features.py
+```
+
+These commands expect the relevant raw inputs to be present. The current feature-building script is designed around the project's 2010 and 2011 DP03 files and the existing target, so it may need changes for newer periods or different input filenames. Do not assume these two commands automatically ingest arbitrary new data.
+
+Before training, verify that:
+- The target and feature rows match by GEOID.
+- Each row represents one tract.
+- The feature columns have the expected names and types.
+- Missing-value handling is consistent with the training pipeline.
+- Features do not use information from after the target's starting point or otherwise leak the outcome.
+- Any geographic features use compatible tract boundaries.
+
+### 4. Retrain the models
+
+Once the dataset is validated, run the relevant training scripts from the repository root:
+
+```bash
+PYTHONPATH=src python src/train_logistic_model.py
+PYTHONPATH=src python src/train_model.py
+PYTHONPATH=src python src/train_ann.py
+PYTHONPATH=src python src/train_ensemble.py
+```
+
+Run the spatial model only after its spatial dataset and geometry inputs are available:
+
+```bash
+PYTHONPATH=src python src/train_spatial_model.py
+```
+
+These scripts may overwrite existing files in `models/` and `results/`. Back up any results you want to preserve before retraining. Confirm that the output artefacts were generated successfully and that the dashboard loads the newly generated results.
+
+### 5. Test on genuinely unseen data
+
+For a meaningful test, hold out data that was not used to fit the model or tune its settings. For example, use a later time period or hold out entire counties. Do not use the same records for both training and final evaluation.
+
+Check the results in `results/`, including `model_comparison.csv`, `county_cv.csv`, and `tract_predictions.csv` when those files are produced. Review the number of rows, missing predictions, class balance, and relevant metrics such as balanced accuracy, precision, recall, F1, and ROC-AUC where applicable. Compare the models against the majority-class baseline.
+
+For a practical manual check:
+1. Select a few GEOIDs from the held-out dataset.
+2. Confirm their input features and target values against the source data.
+3. Check that each GEOID has at most one prediction in the output.
+4. Verify that predicted values and probabilities, if provided, are valid.
+5. Compare the predictions with the observed target only after predictions have been generated.
+6. Record the data period, held-out geography, features, model, and metrics.
+
+A successful dashboard launch only confirms that the app can run; it does not prove that the model generalizes to new data. The current scripts and file paths may require adjustment before a fully automated new-data workflow is available.
+
+## Future improvements
+
+Possible next steps for this project include:
+
+- **Support newer ACS periods:** parameterize the years and variable names so the data pipeline can be reused without manually editing several scripts.
+- **Automate data validation:** check GEOID format, duplicate tracts, missing values, expected columns, and row counts before training.
+- **Add a reproducible pipeline command:** provide one documented entry point to download or load data, validate it, build features, train models, and produce evaluation reports.
+- **Strengthen evaluation:** use county-held-out and time-based tests, and report confusion matrices, precision-recall curves, and probability calibration where appropriate.
+- **Track experiments:** save dataset periods, target definitions, feature lists, package versions, model settings, and metrics with each run.
+- **Improve interpretability:** show which features influence model outputs, while explaining that feature importance does not establish causation.
+- **Account for inflation:** provide an inflation-adjusted housing-cost comparison in addition to nominal dollar changes.
+- **Handle geographic changes:** document how census-tract boundary changes are matched or harmonized across periods.
+- **Improve the target definition:** consider multiple indicators of neighborhood change, affordability, and displacement where reliable data is available. Keep proxy labels clearly distinguished from verified outcomes.
+- **Add automated tests:** test data cleaning, GEOID matching, target construction, feature alignment, and prediction output generation on small known examples.
+
+Prioritize **data validation, leakage-resistant evaluation, and a repeatable new-data pipeline** before describing the dashboard as a reliable early-warning system.
 
 ## Data sources
 
@@ -292,57 +395,8 @@ Do not compare metrics from different splits or pipelines as if they were direct
 
 ACS 5-year estimates describe multi-year periods; they should not be interpreted as single-year measurements. Housing-cost dollar values in the historical dashboard are nominal unless an inflation adjustment is explicitly applied.
 
-## Limitations and responsible use
 
-1. **Proxy target:** an increase in median housing costs is not, by itself, a complete definition of gentrification or displacement.
-2. **Historical period:** the dashboard compares historical estimates; it is not a guarantee of future conditions.
-3. **Nominal dollars:** displayed changes are not inflation-adjusted unless stated otherwise.
-4. **ACS uncertainty:** ACS estimates have sampling error and may include missing or suppressed values.
-5. **Geographic consistency:** tract boundaries and identifiers can change across Census vintages; the current map uses 2010 tract geography.
-6. **Model uncertainty:** scores depend on feature selection, preprocessing, class balance, validation design, and model calibration.
-7. **Equity and policy:** do not use tract-level model outputs alone to make decisions affecting individuals, housing access, enforcement, or allocation of essential services.
-8. **Reproducibility:** results are only reproducible when the underlying data, model artefacts, code version, and environment are available.
 
-## Troubleshooting
 
-### `ModuleNotFoundError: preprocessing`
-
-Run training scripts from the repository root with `PYTHONPATH=src`, for example:
-
-```bash
-PYTHONPATH=src python src/train_ensemble.py
-```
-
-### Missing CSV or shapefile
-
-Confirm the path and filename in `app.py` or the relevant `src/` script. Extract the TIGER/Line ZIP into the expected `data/raw/tract10/` directory and preserve all companion shapefile files.
-
-### `CENSUS_API_KEY` is missing
-
-Set the environment variable in the same terminal session before running a script that requires it:
-
-```bash
-export CENSUS_API_KEY="YOUR_CENSUS_API_KEY"
-```
-
-### TensorFlow or GeoPandas installation errors
-
-Use a supported Python version in a fresh virtual environment. Avoid mixing system packages with the project environment. Review the error and test compatible dependency versions instead of blindly upgrading every package.
-
-### Dashboard shows no model estimate
-
-Check whether `results/tract_predictions.csv` exists, includes `tract_id` and `rf_oof_probability`, and contains the selected tract's GEOID. Train the ensemble if the output is absent.
-
-## Future improvements
-
-- Establish a formal, literature-grounded gentrification or displacement target rather than relying only on housing-cost increases.
-- Add a genuinely prospective evaluation: train on earlier years and test on a later period.
-- Audit spatial leakage and evaluate on held-out counties or regions.
-- Add model calibration, uncertainty intervals, feature explanations, and subgroup error analysis.
-- Provide a tested one-command pipeline for downloading, validating, preparing, training, and launching.
-- Add automated tests and continuous integration.
-- Publish data provenance, licensing, and a versioned release of any distributable data/model artefacts.
-
-## License
-
-No license is specified unless a `LICENSE` file is added to this repository. Until then, do not assume that the source code is licensed for unrestricted reuse.
+Vivaan J
+Chiranth J
