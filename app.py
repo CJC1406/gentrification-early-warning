@@ -39,14 +39,15 @@ st.set_page_config(
 # 2. DESIGN TOKENS
 # ============================================================
 
-PAPER = "#F1F3F2"
+PAPER = "#F4F5F7"
 CARD = "#FFFFFF"
-INK = "#172330"
-MUTED = "#5A6573"
-FAINT = "#8A949F"
-RULE = "#D8DDDA"
-GRID = "#E7EAE8"
-NAVY = "#17324D"
+INK = "#0F1B2A"
+MUTED = "#566375"
+FAINT = "#8B95A3"
+RULE = "#E1E5EA"
+GRID = "#EDF0F3"
+NAVY = "#12304F"
+DEEP = "#0A1C30"
 
 # Data colours (validated for colour-vision deficiency on white).
 COOL = "#1F72A3"   # no increase / 2012
@@ -54,12 +55,13 @@ WARM = "#B8452C"   # increase / 2016
 MID = "#ECEAE4"    # diverging midpoint
 NO_DATA = "#CBD0CD"
 
-FONT = "Public Sans, system-ui, -apple-system, Segoe UI, sans-serif"
+FONT = "Inter, system-ui, -apple-system, Segoe UI, sans-serif"
+DISPLAY = "Manrope, Inter, system-ui, sans-serif"
 
 st.markdown(
     f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap');
 
     :root {{
         --paper: {PAPER};
@@ -69,8 +71,11 @@ st.markdown(
         --faint: {FAINT};
         --rule: {RULE};
         --navy: {NAVY};
+        --deep: {DEEP};
         --cool: {COOL};
         --warm: {WARM};
+        --radius: 16px;
+        --shadow: 0 1px 2px rgba(15, 27, 42, .04), 0 10px 28px -14px rgba(15, 27, 42, .16);
     }}
 
     html, body, .stApp, .stApp p, .stApp li, .stApp label,
@@ -78,115 +83,259 @@ st.markdown(
         font-family: {FONT};
     }}
 
-    .stApp {{ background: var(--paper); color: var(--ink); }}
+    .stApp {{
+        color: var(--ink);
+        background:
+            radial-gradient(1200px 520px at 85% -120px, rgba(31, 114, 163, .10), transparent 60%),
+            var(--paper);
+    }}
     header[data-testid="stHeader"] {{ background: transparent; }}
     [data-testid="stSidebar"], [data-testid="collapsedControl"] {{ display: none !important; }}
 
     .block-container {{
         max-width: 1320px;
-        padding: 2.4rem 2rem 4rem 2rem;
+        padding: 1.6rem 2rem 4rem 2rem;
     }}
 
-    /* ---------- masthead ---------- */
-    .masthead {{ margin-bottom: 1.6rem; }}
+    /* ---------- hero ---------- */
+    .hero {{
+        position: relative; overflow: hidden;
+        display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2.5rem;
+        align-items: center;
+        padding: 2.1rem 2.4rem 2.2rem 2.4rem;
+        border-radius: 22px;
+        color: #fff;
+        background:
+            radial-gradient(520px 300px at 92% 110%, rgba(184, 69, 44, .38), transparent 70%),
+            radial-gradient(600px 340px at 0% -20%, rgba(31, 114, 163, .45), transparent 70%),
+            linear-gradient(135deg, var(--deep) 0%, var(--navy) 100%);
+        box-shadow: 0 24px 48px -28px rgba(10, 28, 48, .7);
+        margin-bottom: 1.6rem;
+    }}
+    .hero::before {{
+        content: ""; position: absolute; inset: 0; pointer-events: none;
+        background-image: radial-gradient(rgba(255, 255, 255, .09) 1px, transparent 1px);
+        background-size: 18px 18px;
+        mask-image: linear-gradient(90deg, transparent 0%, #000 55%);
+        -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 55%);
+    }}
+    .hero > * {{ position: relative; }}
     .wordmark {{
         display: flex; align-items: center; gap: .6rem;
-        font-weight: 700; font-size: .95rem; color: var(--navy);
-        letter-spacing: -.005em;
+        font-family: {DISPLAY}; font-weight: 700; font-size: .92rem;
+        color: rgba(255, 255, 255, .92); letter-spacing: -.005em;
     }}
-    .wordmark svg {{ flex: none; }}
-    .finding {{
-        font-size: clamp(1.7rem, 3.1vw, 2.55rem);
-        line-height: 1.12;
-        font-weight: 750;
-        letter-spacing: -.025em;
-        color: var(--ink);
-        max-width: 26ch;
-        margin: 1.1rem 0 .7rem 0;
+    .wordmark .logo {{
+        display: grid; place-items: center; width: 32px; height: 32px;
+        border-radius: 9px; background: rgba(255, 255, 255, .1);
+        border: 1px solid rgba(255, 255, 255, .14);
+    }}
+    .eyebrow {{
+        display: inline-flex; align-items: center; gap: .45rem;
+        margin-left: .4rem; padding: .22rem .65rem; border-radius: 999px;
+        font-family: {FONT}; font-size: .74rem; font-weight: 600;
+        color: rgba(255, 255, 255, .78);
+        background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .12);
+    }}
+    .eyebrow .dot {{ width: 6px; height: 6px; border-radius: 50%; background: #F08C6E; }}
+    .stApp .finding {{
+        font-family: {DISPLAY};
+        font-size: clamp(1.75rem, 3.2vw, 2.7rem);
+        line-height: 1.1; font-weight: 800; letter-spacing: -.03em;
+        color: #fff; max-width: 24ch;
+        margin: 1.25rem 0 .8rem 0;
         font-variant-numeric: tabular-nums;
     }}
-    .dek {{
-        color: var(--muted); font-size: 1rem; line-height: 1.55;
-        max-width: 68ch; margin: 0;
+    .stApp .finding em {{
+        font-style: normal;
+        background: linear-gradient(90deg, #FFB49C, #F08C6E);
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+    }}
+    .stApp .dek {{
+        color: rgba(225, 233, 242, .82); font-size: 1rem; line-height: 1.6;
+        max-width: 64ch; margin: 0;
+    }}
+    .ring {{ text-align: center; padding-right: .4rem; }}
+    .ring svg {{ display: block; margin: 0 auto; }}
+    .ring .big {{
+        font-family: {DISPLAY}; font-weight: 800; font-size: 2rem;
+        fill: #fff; letter-spacing: -.03em;
+    }}
+    .ring .small {{ font-size: .72rem; fill: rgba(225, 233, 242, .75); font-weight: 600; }}
+    .ring-caption {{ margin-top: .55rem; font-size: .8rem; color: rgba(225, 233, 242, .75); }}
+    @media (max-width: 860px) {{
+        .hero {{ grid-template-columns: 1fr; padding: 1.6rem 1.4rem; gap: 1.2rem; }}
+        .ring {{ display: none; }}
     }}
 
-    /* ---------- tabs ---------- */
-    [data-baseweb="tab-list"] {{
-        gap: 2rem; border-bottom: 1px solid var(--rule);
-        background: transparent;
-    }}
-    [data-baseweb="tab"] {{
-        padding: .7rem 0 .8rem 0; background: transparent !important;
-    }}
-    [data-baseweb="tab"] p {{
-        font-weight: 600; font-size: .95rem; color: var(--muted);
-    }}
-    [data-baseweb="tab"][aria-selected="true"] p {{ color: var(--ink); }}
-    [data-baseweb="tab-highlight"] {{ background: var(--navy); height: 2px; }}
-    [data-baseweb="tab-border"] {{ display: none; }}
-    [data-testid="stTabs"] [data-baseweb="tab-panel"] {{ padding-top: 1.6rem; }}
-
-    /* ---------- statistic strip ---------- */
-    .strip {{
-        display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+    /* ---------- tabs: segmented control ---------- */
+    [data-testid="stTabs"] [role="tablist"] {{
+        gap: .25rem; padding: .3rem; width: fit-content; max-width: 100%;
         background: var(--card); border: 1px solid var(--rule);
-        border-radius: 10px; margin: 0 0 1.4rem 0;
+        border-radius: 14px; box-shadow: var(--shadow);
+        overflow-x: auto;
     }}
-    .strip .cell {{ padding: 1.05rem 1.25rem 1.1rem 1.25rem; }}
-    .strip .cell + .cell {{ border-left: 1px solid var(--rule); }}
-    .strip .k {{ color: var(--muted); font-size: .84rem; font-weight: 500; }}
+    [data-testid="stTabs"] [role="tab"] {{
+        height: auto; padding: .5rem 1rem; margin: 0; border-radius: 10px;
+        background: transparent !important; border: none;
+        transition: background .15s ease, color .15s ease;
+    }}
+    [data-testid="stTabs"] [role="tab"]:hover {{ background: #EEF1F5 !important; }}
+    [data-testid="stTabs"] [role="tab"] p {{
+        font-weight: 600; font-size: .9rem; color: var(--muted); white-space: nowrap;
+    }}
+    [data-testid="stTabs"] [role="tab"][aria-selected="true"] {{ background: var(--navy) !important; }}
+    [data-testid="stTabs"] [role="tab"][aria-selected="true"] p {{ color: #fff; }}
+    [data-testid="stTabs"] .react-aria-SelectionIndicator,
+    [data-baseweb="tab-highlight"], [data-baseweb="tab-border"] {{ display: none !important; }}
+    [data-testid="stTabs"] [role="tabpanel"] {{ padding-top: 1.4rem; }}
+
+    /* nested tabs (map detail) stay light */
+    [class*="st-key-panel"] [data-testid="stTabs"] [role="tablist"] {{
+        box-shadow: none; background: #F1F3F6; border-color: transparent;
+    }}
+    [class*="st-key-panel"] [data-testid="stTabs"] [role="tab"][aria-selected="true"] {{
+        background: var(--card) !important; box-shadow: 0 1px 3px rgba(15, 27, 42, .12);
+    }}
+    [class*="st-key-panel"] [data-testid="stTabs"] [role="tab"][aria-selected="true"] p {{ color: var(--ink); }}
+    [class*="st-key-panel"] [data-testid="stTabs"] [role="tabpanel"] {{ padding-top: 1rem; }}
+
+    /* ---------- KPI cards ---------- */
+    .strip {{
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: .9rem; margin: 0 0 1.2rem 0;
+    }}
+    .strip .cell {{
+        position: relative; overflow: hidden;
+        background: var(--card); border: 1px solid var(--rule);
+        border-radius: var(--radius); box-shadow: var(--shadow);
+        padding: 1.05rem 1.2rem 1.1rem 1.2rem;
+        transition: transform .15s ease, box-shadow .15s ease;
+    }}
+    .strip .cell:hover {{ transform: translateY(-2px); }}
+    .strip .cell::after {{
+        content: ""; position: absolute; left: 1.2rem; right: 1.2rem; top: 0; height: 3px;
+        border-radius: 0 0 3px 3px; background: var(--accent, var(--navy)); opacity: .9;
+    }}
+    .strip .k {{
+        color: var(--muted); font-size: .76rem; font-weight: 600;
+        text-transform: uppercase; letter-spacing: .06em;
+    }}
     .strip .v {{
-        color: var(--ink); font-size: 1.65rem; font-weight: 700;
-        letter-spacing: -.02em; margin-top: .3rem;
+        font-family: {DISPLAY};
+        color: var(--ink); font-size: 1.85rem; font-weight: 800;
+        letter-spacing: -.03em; margin-top: .4rem; line-height: 1.1;
         font-variant-numeric: tabular-nums;
     }}
-    .strip .n {{ color: var(--faint); font-size: .8rem; margin-top: .2rem; }}
-    @media (max-width: 900px) {{
-        .strip {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
-        .strip .cell:nth-child(3) {{ border-left: none; }}
-        .strip .cell:nth-child(n+3) {{ border-top: 1px solid var(--rule); }}
-    }}
+    .strip .n {{ color: var(--faint); font-size: .8rem; margin-top: .3rem; }}
 
     /* ---------- panels and section titles ---------- */
     [class*="st-key-panel"] {{
         background: var(--card);
-        border-color: var(--rule) !important;
-        border-radius: 10px;
+        border: 1px solid var(--rule) !important;
+        border-radius: var(--radius) !important;
+        box-shadow: var(--shadow);
+        padding: 1.1rem 1.25rem 1.2rem 1.25rem;
     }}
-    .sec-title {{
+    .st-key-panel_mapcanvas {{ padding: .5rem; }}
+    .stApp .sec-title {{
+        font-family: {DISPLAY};
         font-size: 1.08rem; font-weight: 700; color: var(--ink);
-        letter-spacing: -.01em; margin: 0;
+        letter-spacing: -.015em; margin: 0;
+        display: flex; align-items: center; gap: .55rem; flex-wrap: wrap;
     }}
-    .sec-note {{
+    .stApp .sec-note {{
         color: var(--muted); font-size: .88rem; line-height: 1.5;
-        margin: .25rem 0 .4rem 0; max-width: 72ch;
+        margin: .3rem 0 .5rem 0; max-width: 72ch;
+    }}
+
+    /* ---------- widgets ---------- */
+    [data-baseweb="select"] > div, [data-baseweb="input"], [data-baseweb="base-input"] {{
+        border-radius: 10px !important; border-color: var(--rule) !important;
+        background: #FAFBFC !important;
+    }}
+    [data-baseweb="select"] > div:focus-within, [data-baseweb="input"]:focus-within {{
+        border-color: var(--navy) !important;
+        box-shadow: 0 0 0 3px rgba(18, 48, 79, .12);
+    }}
+    [data-testid="stWidgetLabel"] p {{ font-weight: 600; font-size: .84rem; color: var(--ink); }}
+    [data-testid="stDataFrame"] {{
+        border: 1px solid var(--rule); border-radius: 12px; overflow: hidden;
+    }}
+    [data-testid="stMetric"] {{
+        background: #F7F9FB; border: 1px solid var(--rule);
+        border-radius: 12px; padding: .8rem 1rem;
+    }}
+    [data-testid="stMetricLabel"] p {{
+        font-size: .76rem; font-weight: 600; color: var(--muted);
+        text-transform: uppercase; letter-spacing: .06em;
+    }}
+    [data-testid="stMetricValue"] {{
+        font-family: {DISPLAY}; font-weight: 800; letter-spacing: -.02em;
+    }}
+    [data-testid="stExpander"] details {{
+        background: var(--card); border: 1px solid var(--rule) !important;
+        border-radius: var(--radius); box-shadow: var(--shadow);
+    }}
+    [data-testid="stExpander"] summary p {{ font-weight: 600; }}
+    [data-testid="stCode"], [data-testid="stCodeBlock"] {{ border-radius: 12px; }}
+
+    [data-testid="stDownloadButton"] button {{
+        border-radius: 999px; border: 1px solid var(--navy);
+        background: var(--navy); color: #fff; font-weight: 600;
+        padding: .45rem 1.1rem;
+        box-shadow: 0 6px 16px -8px rgba(18, 48, 79, .6);
+        transition: transform .15s ease, background .15s ease;
+    }}
+    [data-testid="stDownloadButton"] button p {{ color: #fff; }}
+    [data-testid="stDownloadButton"] button:hover {{
+        background: var(--deep); border-color: var(--deep); color: #fff; transform: translateY(-1px);
     }}
 
     /* ---------- tags, legends, prose ---------- */
     .tag {{
-        display: inline-block; padding: .2rem .6rem; border-radius: 999px;
-        font-size: .82rem; font-weight: 600;
+        display: inline-flex; align-items: center; gap: .35rem;
+        padding: .22rem .65rem; border-radius: 999px;
+        font-family: {FONT}; font-size: .78rem; font-weight: 600; letter-spacing: 0;
     }}
-    .tag.up {{ background: #F6E3DE; color: #8E2F1B; }}
-    .tag.flat {{ background: #DDEBF4; color: #134D72; }}
-    .tag.none {{ background: #E6E9E7; color: var(--muted); }}
+    .tag::before {{ content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }}
+    .tag.up {{ background: #F9E6E0; color: #8E2F1B; }}
+    .tag.flat {{ background: #DEEDF6; color: #134D72; }}
+    .tag.none {{ background: #ECEEF1; color: var(--muted); }}
 
-    .legend-row {{ display: flex; align-items: center; gap: .55rem; margin: .4rem 0; font-size: .88rem; color: var(--ink); }}
-    .swatch {{ width: 12px; height: 12px; border-radius: 3px; flex: none; }}
-    .ramp {{ height: 10px; border-radius: 3px; margin: .5rem 0 .25rem 0; }}
-    .ramp-labels {{ display: flex; justify-content: space-between; font-size: .78rem; color: var(--muted); font-variant-numeric: tabular-nums; }}
+    .legend-row {{ display: flex; align-items: center; gap: .55rem; margin: .45rem 0; font-size: .86rem; color: var(--ink); }}
+    .swatch {{ width: 12px; height: 12px; border-radius: 4px; flex: none; }}
+    .ramp {{ height: 10px; border-radius: 999px; margin: .55rem 0 .3rem 0; }}
+    .ramp-labels {{ display: flex; justify-content: space-between; font-size: .76rem; color: var(--muted); font-variant-numeric: tabular-nums; }}
 
-    .prose {{ max-width: 70ch; font-size: .98rem; line-height: 1.65; color: var(--ink); }}
-    .prose h4 {{ font-size: 1.02rem; font-weight: 700; margin: 1.8rem 0 .4rem 0; }}
-    .prose p, .prose li {{ color: #2C3844; }}
-
-    .footnote {{ color: var(--faint); font-size: .8rem; margin-top: 2.5rem; }}
-
-    [data-testid="stDownloadButton"] button {{
-        border-radius: 8px; border: 1px solid var(--rule);
-        background: var(--card); color: var(--ink); font-weight: 600;
+    .prose-grid {{
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 1rem;
     }}
-    [data-testid="stDownloadButton"] button:hover {{ border-color: var(--navy); color: var(--navy); }}
+    .prose {{
+        background: var(--card); border: 1px solid var(--rule);
+        border-radius: var(--radius); box-shadow: var(--shadow);
+        padding: 1.3rem 1.5rem 1.1rem 1.5rem;
+        font-size: .95rem; line-height: 1.65; color: var(--ink);
+    }}
+    .prose .step {{
+        display: inline-grid; place-items: center; width: 26px; height: 26px;
+        border-radius: 8px; background: #EAF0F6; color: var(--navy);
+        font-family: {DISPLAY}; font-weight: 800; font-size: .8rem;
+    }}
+    .stApp .prose h4 {{
+        font-family: {DISPLAY}; font-size: 1.05rem; font-weight: 700;
+        letter-spacing: -.01em; margin: .7rem 0 .4rem 0; padding: 0;
+    }}
+    .stApp .prose p, .stApp .prose li {{ color: #2C3844; }}
+    .prose ul {{ padding-left: 1.1rem; margin: 0; }}
+    .prose li {{ margin: .25rem 0; }}
+    .prose.wide {{ grid-column: 1 / -1; }}
+
+    .stApp .footnote {{
+        display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
+        color: var(--faint); font-size: .8rem;
+        margin-top: 2.5rem; padding-top: 1.1rem; border-top: 1px solid var(--rule);
+    }}
     </style>
     """,
     unsafe_allow_html=True,
@@ -198,7 +347,7 @@ pio.templates["atlas"] = go.layout.Template(
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         colorway=[COOL, WARM],
-        title=dict(font=dict(size=14, color=INK), x=0, xanchor="left"),
+        title=dict(font=dict(family=DISPLAY, size=14, color=INK), x=0, xanchor="left"),
         xaxis=dict(
             gridcolor=GRID, linecolor=RULE, zeroline=False, ticks="",
             title=dict(font=dict(size=12, color=MUTED)),
@@ -223,6 +372,19 @@ pio.templates["atlas"] = go.layout.Template(
 pio.templates.default = "atlas"
 
 CHART_CONFIG = {"displayModeBar": False}
+
+
+def chart(fig):
+    """Render a Plotly figure. Explicit layout values survive Streamlit's own chart theme."""
+    fig.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family=FONT, color=INK),
+        hoverlabel=dict(bgcolor=CARD, bordercolor=RULE, font=dict(family=FONT, color=INK)),
+    )
+    fig.update_xaxes(gridcolor=GRID, linecolor=RULE, zeroline=False)
+    fig.update_yaxes(gridcolor=GRID, linecolor=RULE, zeroline=False)
+    st.plotly_chart(fig, width="stretch", config=CHART_CONFIG)
 
 
 # ============================================================
@@ -265,13 +427,16 @@ def pct(value):
 
 
 def stat_strip(items):
-    """A single bordered strip of statistics: [(label, value, note), ...]."""
-    cells = "".join(
-        f'<div class="cell"><div class="k">{html.escape(k)}</div>'
-        f'<div class="v">{html.escape(v)}</div>'
-        f'<div class="n">{html.escape(n)}</div></div>'
-        for k, v, n in items
-    )
+    """A row of KPI cards: [(label, value, note), ...] or (label, value, note, accent)."""
+    cells = ""
+    for item in items:
+        k, v, n = item[:3]
+        accent = item[3] if len(item) > 3 else NAVY
+        cells += (
+            f'<div class="cell" style="--accent:{accent}"><div class="k">{html.escape(k)}</div>'
+            f'<div class="v">{html.escape(v)}</div>'
+            f'<div class="n">{html.escape(n)}</div></div>'
+        )
     st.markdown(f'<div class="strip">{cells}</div>', unsafe_allow_html=True)
 
 
@@ -488,22 +653,41 @@ median_change = target_df["housing_cost_change"].median()
 # 6. MASTHEAD
 # ============================================================
 
+RING_R = 54
+RING_C = 2 * np.pi * RING_R
+
 st.markdown(
     f"""
-    <div class="masthead">
-      <div class="wordmark">
-        <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
-          <rect x="1" y="11" width="5" height="10" rx="1" fill="{COOL}"/>
-          <rect x="8.5" y="6" width="5" height="15" rx="1" fill="{NAVY}"/>
-          <rect x="16" y="1" width="5" height="20" rx="1" fill="{WARM}"/>
-        </svg>
-        California Gentrification Early Warning
+    <div class="hero">
+      <div>
+        <div class="wordmark">
+          <span class="logo">
+            <svg width="18" height="18" viewBox="0 0 22 22" aria-hidden="true">
+              <rect x="1" y="11" width="5" height="10" rx="1.2" fill="#7FB8DA"/>
+              <rect x="8.5" y="6" width="5" height="15" rx="1.2" fill="#FFFFFF"/>
+              <rect x="16" y="1" width="5" height="20" rx="1.2" fill="#F08C6E"/>
+            </svg>
+          </span>
+          California Gentrification Early Warning
+          <span class="eyebrow"><span class="dot"></span>ACS 2012 → 2016</span>
+        </div>
+        <p class="finding"><em>{rising_count:,}</em> of {valid_tract_count:,} California census tracts
+        saw median housing costs rise between 2012 and 2016.</p>
+        <p class="dek">Tract-level ACS 5-year estimates, compared with models that try to anticipate
+        which tracts would rise using only data from 2010 and 2011. Dollar amounts are nominal
+        (not adjusted for inflation).</p>
       </div>
-      <p class="finding">{rising_count:,} of {valid_tract_count:,} California census tracts
-      saw median housing costs rise between 2012 and 2016.</p>
-      <p class="dek">Tract-level ACS 5-year estimates, compared with models that try to anticipate
-      which tracts would rise using only data from 2010 and 2011. Dollar amounts are nominal
-      (not adjusted for inflation).</p>
+      <div class="ring" aria-label="{rising_pct:.0f}% of tracts saw costs rise">
+        <svg width="150" height="150" viewBox="0 0 150 150">
+          <circle cx="75" cy="75" r="{RING_R}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="12"/>
+          <circle cx="75" cy="75" r="{RING_R}" fill="none" stroke="#F08C6E" stroke-width="12"
+                  stroke-linecap="round" transform="rotate(-90 75 75)"
+                  stroke-dasharray="{RING_C * rising_pct / 100:.1f} {RING_C:.1f}"/>
+          <text x="75" y="80" text-anchor="middle" class="big">{rising_pct:.0f}%</text>
+          <text x="75" y="100" text-anchor="middle" class="small">ROSE</text>
+        </svg>
+        <div class="ring-caption">Median change {html.escape(signed_money(median_change))}/mo</div>
+      </div>
     </div>
     """,
     unsafe_allow_html=True,
@@ -521,9 +705,9 @@ with overview_tab:
     stat_strip(
         [
             ("Census tracts analysed", number(valid_tract_count), "Valid cost in both years"),
-            ("Median monthly cost, 2012", money(state_median_2012), "ACS 2008–2012"),
-            ("Median monthly cost, 2016", money(state_median_2016), "ACS 2012–2016"),
-            ("Tracts where costs rose", pct(rising_pct), f"{number(rising_count)} tracts"),
+            ("Median monthly cost, 2012", money(state_median_2012), "ACS 2008–2012", COOL),
+            ("Median monthly cost, 2016", money(state_median_2016), "ACS 2012–2016", WARM),
+            ("Tracts where costs rose", pct(rising_pct), f"{number(rising_count)} tracts", WARM),
         ]
     )
 
@@ -562,7 +746,7 @@ with overview_tab:
             fig.update_layout(height=430)
             fig.update_xaxes(title="Monthly housing cost, 2012", tickprefix="$", range=[0, hi])
             fig.update_yaxes(title="Monthly housing cost, 2016", tickprefix="$", range=[0, hi])
-            st.plotly_chart(fig, width="stretch", config=CHART_CONFIG)
+            chart(fig)
 
     with right:
         with panel("hist"):
@@ -595,7 +779,7 @@ with overview_tab:
             fig.update_layout(height=430, bargap=0)
             fig.update_xaxes(title="Change in monthly cost, 2012 to 2016 (1st–99th percentile)", tickprefix="$")
             fig.update_yaxes(title="Tracts")
-            st.plotly_chart(fig, width="stretch", config=CHART_CONFIG)
+            chart(fig)
 
     with panel("top"):
         section("Largest increases", "The ten tracts with the biggest rise in median monthly housing cost.")
@@ -626,6 +810,7 @@ with overview_tab:
         file_name="california_historical_target.csv",
         mime="text/csv",
         key="download_historical_target_csv",
+        icon=":material/download:",
     )
 
 
@@ -639,16 +824,24 @@ with explorer_tab:
     if not tract_ids:
         st.warning("No valid census tract IDs are available.")
     else:
-        pick_col, _ = st.columns([1, 2])
-        with pick_col:
-            selected_tract = st.selectbox(
-                "Census tract (11-digit GEOID)",
-                tract_ids,
-                key="explorer_tract",
-                help="Type to search. The first five digits are the state and county code.",
-            )
+        with panel("picker"):
+            pick_col, info_col = st.columns([1, 2], vertical_alignment="bottom")
+            with pick_col:
+                selected_tract = st.selectbox(
+                    "Census tract (11-digit GEOID)",
+                    tract_ids,
+                    key="explorer_tract",
+                    help="Type to search. The first five digits are the state and county code.",
+                )
 
-        row = target_df[target_df["tract_id"] == selected_tract].iloc[0]
+            row = target_df[target_df["tract_id"] == selected_tract].iloc[0]
+
+            with info_col:
+                st.markdown(
+                    f'<p class="sec-title">Tract {html.escape(selected_tract)} {label_tag(row["gentrified"])}</p>'
+                    f'<p class="sec-note">County FIPS {html.escape(selected_tract[2:5])}, California</p>',
+                    unsafe_allow_html=True,
+                )
 
         pred_note = "Model output not available"
         pred_value = "N/A"
@@ -660,8 +853,8 @@ with explorer_tab:
 
         stat_strip(
             [
-                ("Monthly cost, 2012", money(row["housing_cost_2012"]), f"California median {money(state_median_2012)}"),
-                ("Monthly cost, 2016", money(row["housing_cost_2016"]), f"California median {money(state_median_2016)}"),
+                ("Monthly cost, 2012", money(row["housing_cost_2012"]), f"California median {money(state_median_2012)}", COOL),
+                ("Monthly cost, 2016", money(row["housing_cost_2016"]), f"California median {money(state_median_2016)}", WARM),
                 ("Change", signed_money(row["housing_cost_change"]),
                  pct(100 * row["housing_cost_change"] / row["housing_cost_2012"])),
                 ("Model estimate", pred_value, pred_note),
@@ -698,8 +891,8 @@ with explorer_tab:
                 )
             fig.update_layout(height=240, margin=dict(l=8, r=24, t=40, b=8))
             fig.update_xaxes(tickprefix="$", title="Median monthly housing cost")
-            fig.update_yaxes(showgrid=False)
-            st.plotly_chart(fig, width="stretch", config=CHART_CONFIG)
+            fig.update_yaxes(showgrid=False, range=[-0.6, 1.7])
+            chart(fig)
 
         with panel("indicators"):
             section("Census indicators for this tract", "All cleaned ACS variables available for the tract.")
@@ -742,6 +935,7 @@ with explorer_tab:
             file_name=f"tract_{selected_tract}_history.csv",
             mime="text/csv",
             key="download_explorer_tract_csv",
+        icon=":material/download:",
         )
 
 
@@ -780,7 +974,7 @@ with map_tab:
                 [
                     ("Tract polygons", number(len(map_gdf)), "2010 Census geography"),
                     ("Matched to cost data", number(matched), f"{number(len(map_gdf) - matched)} without data"),
-                    ("Tracts where costs rose", number(rising_map), pct(100 * rising_map / matched if matched else 0)),
+                    ("Tracts where costs rose", number(rising_map), pct(100 * rising_map / matched if matched else 0), WARM),
                     ("Average change per tract", pct(avg_pct), "2012 to 2016, nominal"),
                 ]
             )
@@ -875,12 +1069,15 @@ with map_tab:
             folium_map = folium.Map(
                 location=[37.2, -119.5],
                 zoom_start=6,
-                tiles="CartoDB positron",
+                # CARTO basemaps now require an API key; Esri's light-gray canvas does not.
+                tiles="https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+                attr="Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ",
+                max_zoom=16,
                 prefer_canvas=True,
                 control_scale=True,
             )
-            minx, miny, maxx, maxy = display_gdf.total_bounds
-            folium_map.fit_bounds([[miny, minx], [maxy, maxx]], padding=(16, 16))
+            # No fit_bounds: the map is built while its tab is hidden (zero size),
+            # which makes Leaflet jump to maximum zoom. The fixed view above covers California.
 
             folium.GeoJson(
                 display_gdf.to_json(),
@@ -894,12 +1091,12 @@ with map_tab:
                     sticky=False,
                     style=(
                         f"font-family:{FONT};font-size:12px;color:{INK};background:#fff;"
-                        f"border:1px solid {RULE};border-radius:6px;box-shadow:none;padding:6px 8px;"
+                        f"border:1px solid {RULE};border-radius:10px;box-shadow:0 8px 20px -10px rgba(15,27,42,.35);padding:8px 10px;"
                     ),
                 ),
             ).add_to(folium_map)
 
-            with canvas:
+            with canvas, panel("mapcanvas"):
                 map_result = st_folium(
                     folium_map,
                     height=640,
@@ -927,7 +1124,7 @@ with map_tab:
 
                 with panel("mapdetail"):
                     st.markdown(
-                        f'<p class="sec-title">Tract {html.escape(str(selected_tract))} &nbsp;{label_tag(sel.get("gentrified"))}</p>'
+                        f'<p class="sec-title">Tract {html.escape(str(selected_tract))} {label_tag(sel.get("gentrified"))}</p>'
                         f'<p class="sec-note">County FIPS {html.escape(str(sel.get("county_fips", "")))}, California</p>',
                         unsafe_allow_html=True,
                     )
@@ -1049,7 +1246,7 @@ with models_tab:
                 fig.update_layout(height=60 + 46 * len(plot_df), bargap=0.35, margin=dict(l=8, r=40, t=10, b=8))
                 fig.update_xaxes(range=[0, 1.05], title="ROC AUC")
                 fig.update_yaxes(showgrid=False)
-                st.plotly_chart(fig, width="stretch", config=CHART_CONFIG)
+                chart(fig)
 
         with panel("table"):
             section("All metrics", "Accuracy alone is misleading here because most tracts rose; compare every model with the baseline row.")
@@ -1083,17 +1280,22 @@ with models_tab:
 with methodology_tab:
     st.markdown(
         r"""
+<div class="prose-grid">
 <div class="prose">
-
+<span class="step">1</span>
 <h4>Question</h4>
 <p>Can 2010–2011 census-tract characteristics anticipate which California tracts saw
 housing costs rise between 2012 and 2016?</p>
-
+</div>
+<div class="prose">
+<span class="step">2</span>
 <h4>Outcome</h4>
 <p>For each tract, H is the ACS median monthly housing cost (table B25105). A tract is
 labelled 1 if H<sub>2016</sub> − H<sub>2012</sub> &gt; 0 and 0 otherwise. This measures a
 rise in housing cost, which is one symptom of gentrification and not a definition of it.</p>
-
+</div>
+<div class="prose">
+<span class="step">3</span>
 <h4>Features</h4>
 <ul>
 <li>All DP03 economic-profile variables for 2010 and 2011 (ACS 5-year).</li>
@@ -1102,7 +1304,9 @@ housing cost and in income distribution (Queen contiguity).</li>
 <li>Census "no estimate" codes such as −666666666 are treated as missing; missing values are
 filled with training-set medians.</li>
 </ul>
-
+</div>
+<div class="prose">
+<span class="step">4</span>
 <h4>Models and evaluation</h4>
 <ul>
 <li>Logistic regression, random forest, a feed-forward neural network, and two ensembles
@@ -1112,7 +1316,9 @@ training data only (cross-validation or a validation split); the test set is use
 <li>Every score is reported next to a majority-class baseline, and the random forest is also
 checked with folds that hold out whole counties.</li>
 </ul>
-
+</div>
+<div class="prose wide">
+<span class="step">!</span>
 <h4>Limitations</h4>
 <ul>
 <li>Dollar values are nominal. Inflation between the 2012 and 2016 releases pushes most tracts
@@ -1122,7 +1328,7 @@ so year-to-year changes between adjacent releases are small and noisy.</li>
 <li>Tract estimates carry sampling error; small changes may not be statistically meaningful.</li>
 <li>A prediction is not evidence of displacement, causation or any household's experience.</li>
 </ul>
-
+</div>
 </div>
         """,
         unsafe_allow_html=True,
